@@ -9,36 +9,59 @@
  */
 
 import { Pool, PoolClient } from 'pg';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { config } from './config';
 import { logger } from './logger';
 
 // Database connection pool
 let pool: Pool | null = null;
+let supabaseClient: SupabaseClient | null = null;
 
 /**
  * Create database connection pool
  */
 export async function connectDatabase(): Promise<void> {
   try {
-    pool = new Pool({
-      connectionString: config.databaseUrl,
-      max: 20, // Maximum number of clients in the pool
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
-      ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false
-    });
+    // Check if using Supabase
+    if (config.databaseUrl.includes('supabase.co')) {
+      // Initialize Supabase client
+      supabaseClient = createClient(
+        config.supabaseUrl!,
+        config.supabaseServiceKey!
+      );
+      
+      // Test Supabase connection
+      const { data, error } = await supabaseClient
+        .from('organizations')
+        .select('count')
+        .limit(1);
+      
+      if (error) {
+        throw new Error(`Supabase connection failed: ${error.message}`);
+      }
+      
+      logger.info('Supabase client connected successfully');
+    } else {
+      pool = new Pool({
+        connectionString: config.databaseUrl,
+        max: 20, // Maximum number of clients in the pool
+        idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+        connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+        ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false
+      });
 
-    // Test the connection
-    const client = await pool.connect();
-    await client.query('SELECT NOW()');
-    client.release();
+      // Test the connection
+      const client = await pool.connect();
+      await client.query('SELECT NOW()');
+      client.release();
 
-    logger.info('Database connection pool created successfully');
+      logger.info('Database connection pool created successfully');
 
-    // Handle pool errors
-    pool.on('error', (err) => {
-      logger.error('Unexpected error on idle client', err);
-    });
+      // Handle pool errors
+      pool.on('error', (err) => {
+        logger.error('Unexpected error on idle client', err);
+      });
+    }
 
   } catch (error) {
     logger.error('Failed to connect to database:', error);
@@ -60,20 +83,43 @@ export function getPool(): Pool {
  * Execute a query with automatic connection management
  */
 export async function query(text: string, params?: any[]): Promise<any> {
-  const pool = getPool();
   const start = Date.now();
   
   try {
-    const result = await pool.query(text, params);
-    const duration = Date.now() - start;
-    
-    logger.debug('Database query executed', {
-      query: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
-      duration: `${duration}ms`,
-      rows: result.rowCount
-    });
-    
-    return result;
+    if (isUsingSupabase()) {
+      // For Supabase, we need to use the RPC function for raw SQL
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.rpc('execute_sql', {
+        query: text,
+        params: params || []
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      const duration = Date.now() - start;
+      logger.debug('Supabase query executed', {
+        query: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+        duration: `${duration}ms`,
+        rows: data?.length || 0
+      });
+      
+      return { rows: data || [], rowCount: data?.length || 0 };
+    } else {
+      // PostgreSQL pool query
+      const pool = getPool();
+      const result = await pool.query(text, params);
+      const duration = Date.now() - start;
+      
+      logger.debug('Database query executed', {
+        query: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+        duration: `${duration}ms`,
+        rows: result.rowCount
+      });
+      
+      return result;
+    }
   } catch (error) {
     const duration = Date.now() - start;
     logger.error('Database query failed', {
@@ -112,20 +158,41 @@ export async function transaction<T>(
  */
 export async function healthCheck(): Promise<{ status: string; details: any }> {
   try {
-    const result = await query('SELECT NOW() as timestamp, version() as version');
-    
-    return {
-      status: 'healthy',
-      details: {
-        timestamp: result.rows[0].timestamp,
-        version: result.rows[0].version,
-        pool: {
-          totalCount: pool?.totalCount || 0,
-          idleCount: pool?.idleCount || 0,
-          waitingCount: pool?.waitingCount || 0
-        }
+    if (isUsingSupabase()) {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('count')
+        .limit(1);
+      
+      if (error) {
+        throw error;
       }
-    };
+      
+      return {
+        status: 'healthy',
+        details: {
+          provider: 'supabase',
+          timestamp: new Date().toISOString(),
+          connection: 'active'
+        }
+      };
+    } else {
+      const result = await query('SELECT NOW() as timestamp, version() as version');
+      
+      return {
+        status: 'healthy',
+        details: {
+          timestamp: result.rows[0].timestamp,
+          version: result.rows[0].version,
+          pool: {
+            totalCount: pool?.totalCount || 0,
+            idleCount: pool?.idleCount || 0,
+            waitingCount: pool?.waitingCount || 0
+          }
+        }
+      };
+    }
   } catch (error) {
     return {
       status: 'unhealthy',
@@ -145,6 +212,45 @@ export async function closeDatabase(): Promise<void> {
     pool = null;
     logger.info('Database connection pool closed');
   }
+  if (supabaseClient) {
+    // Supabase client doesn't need explicit closing
+    supabaseClient = null;
+    logger.info('Supabase client closed');
+  }
+}
+
+/**
+ * Initialize Supabase client
+ */
+export function initializeSupabase(): SupabaseClient {
+  if (!config.useSupabase) {
+    throw new Error('Supabase is not enabled. Set USE_SUPABASE=true in environment variables.');
+  }
+
+  if (!config.supabaseUrl || !config.supabaseAnonKey) {
+    throw new Error('Supabase configuration missing. Provide SUPABASE_URL and SUPABASE_ANON_KEY.');
+  }
+
+  supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+  logger.info('Supabase client initialized successfully');
+  return supabaseClient;
+}
+
+/**
+ * Get Supabase client instance
+ */
+export function getSupabaseClient(): SupabaseClient {
+  if (!supabaseClient) {
+    return initializeSupabase();
+  }
+  return supabaseClient;
+}
+
+/**
+ * Check if using Supabase
+ */
+export function isUsingSupabase(): boolean {
+  return config.databaseUrl.includes('supabase.co');
 }
 
 /**

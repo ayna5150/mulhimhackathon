@@ -129,6 +129,7 @@ router.get('/', async (req: Request, res: Response) => {
     };
 
     res.json(stats);
+    return;
 
   } catch (error) {
     logger.error('Stats request failed', {
@@ -141,6 +142,7 @@ router.get('/', async (req: Request, res: Response) => {
       message: 'Failed to retrieve statistics',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -225,6 +227,7 @@ router.get('/scans', async (req: Request, res: Response) => {
       generated_at: new Date().toISOString(),
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Scan stats request failed', {
@@ -237,6 +240,7 @@ router.get('/scans', async (req: Request, res: Response) => {
       message: 'Failed to retrieve scan statistics',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -317,6 +321,7 @@ router.get('/detections', async (req: Request, res: Response) => {
       generated_at: new Date().toISOString(),
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Detection stats request failed', {
@@ -329,6 +334,7 @@ router.get('/detections', async (req: Request, res: Response) => {
       message: 'Failed to retrieve detection statistics',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -406,6 +412,7 @@ router.get('/engagement', async (req: Request, res: Response) => {
       generated_at: new Date().toISOString(),
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Engagement stats request failed', {
@@ -418,6 +425,7 @@ router.get('/engagement', async (req: Request, res: Response) => {
       message: 'Failed to retrieve engagement statistics',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -478,7 +486,7 @@ router.get('/export', async (req: Request, res: Response) => {
       'Event Data'
     ].join(',');
 
-    const csvRows = exportData.rows.map(row => [
+    const csvRows = exportData.rows.map((row: any) => [
       row.created_at,
       `"${row.url || ''}"`,
       `"${row.domain || ''}"`,
@@ -499,6 +507,7 @@ router.get('/export', async (req: Request, res: Response) => {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
     res.send(csvContent);
+    return;
 
   } catch (error) {
     logger.error('Export stats request failed', {
@@ -511,6 +520,7 @@ router.get('/export', async (req: Request, res: Response) => {
       message: 'Failed to export statistics',
       correlation_id: correlationId
     });
+    return;
   }
 });
 

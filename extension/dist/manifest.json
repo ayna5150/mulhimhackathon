@@ -1,0 +1,76 @@
+{
+  "manifest_version": 3,
+  "name": "SmartShield - Phishing Protection",
+  "version": "1.0.0",
+  "description": "Advanced phishing detection and protection for Chrome. Analyzes web pages and emails to detect malicious content and provides real-time warnings.",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "scripting",
+    "alarms",
+    "notifications"
+  ],
+  
+  "host_permissions": [
+    "http://localhost:*/*",
+    "https://localhost:*/*",
+    "http://127.0.0.1:*/*",
+    "https://127.0.0.1:*/*",
+    "<all_urls>"
+  ],
+  
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SmartShield",
+    "default_icon": {
+      "16": "images/icon-16.png",
+      "32": "images/icon-32.png",
+      "48": "images/icon-48.png",
+      "128": "images/icon-128.png"
+    }
+  },
+  
+  "icons": {
+    "16": "images/icon-16.png",
+    "32": "images/icon-32.png",
+    "48": "images/icon-48.png",
+    "128": "images/icon-128.png"
+  },
+  
+  "options_page": "options.html",
+  
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "warning.html",
+        "chatbot.html",
+        "images/*",
+        "fonts/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+  
+  "minimum_chrome_version": "88"
+}

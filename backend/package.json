@@ -11,11 +11,14 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "migrate": "node dist/migrations/run-migrations.js",
+    "migrate": "node src/migrations/run-migrations.js",
+    "migrate:supabase": "node src/migrations/supabase-migration.js",
+    "test:supabase": "node src/test-supabase.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.3",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",

@@ -130,6 +130,7 @@ router.post('/login', async (req: Request, res: Response) => {
       response_time_ms: responseTime,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -144,6 +145,7 @@ router.post('/login', async (req: Request, res: Response) => {
       message: 'Failed to process login request',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -210,6 +212,7 @@ router.post('/register', async (req: Request, res: Response) => {
       response_time_ms: responseTime,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -224,6 +227,7 @@ router.post('/register', async (req: Request, res: Response) => {
       message: 'Failed to process registration request',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -294,6 +298,7 @@ router.get('/me', authenticateToken, async (req: Request, res: Response) => {
       },
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Get user info request failed', {
@@ -307,6 +312,7 @@ router.get('/me', authenticateToken, async (req: Request, res: Response) => {
       message: 'Failed to retrieve user information',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -380,6 +386,7 @@ router.post('/change-password', authenticateToken, async (req: Request, res: Res
       message: 'Password changed successfully',
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Change password request failed', {
@@ -394,6 +401,7 @@ router.post('/change-password', authenticateToken, async (req: Request, res: Res
       correlation_id: correlationId
     });
   }
+  return;
 });
 
 /**

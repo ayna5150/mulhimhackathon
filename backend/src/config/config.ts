@@ -24,6 +24,12 @@ export interface Config {
   databaseUrl: string;
   redisUrl: string;
   
+  // Supabase configuration
+  useSupabase: boolean;
+  supabaseUrl?: string;
+  supabaseAnonKey?: string;
+  supabaseServiceKey?: string;
+  
   // Authentication
   jwtSecret: string;
   
@@ -67,6 +73,11 @@ function validateConfig(): void {
     'JWT_SECRET',
     'DATABASE_URL'
   ];
+
+  // If using Supabase, validate Supabase-specific variables
+  if (process.env.DATABASE_URL?.includes('supabase.co')) {
+    required.push('SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_KEY');
+  }
 
   const missing = required.filter(key => !process.env[key]);
   
@@ -113,6 +124,12 @@ export const config: Config = (() => {
       // Database configuration
       databaseUrl: process.env.DATABASE_URL!,
       redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+      
+      // Supabase configuration
+      useSupabase: process.env.USE_SUPABASE === 'true',
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY,
       
       // Authentication
       jwtSecret: process.env.JWT_SECRET!,

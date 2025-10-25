@@ -386,15 +386,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Chatbot Functions
-let isFullscreen = false;
-let isMinimized = false;
-let originalSize = { width: '350px', height: '500px' };
-
 function showChatbot() {
     const chatbot = document.getElementById('chatbot-widget');
     chatbot.style.display = 'block';
-    chatbot.classList.add('show');
-    chatbot.classList.remove('hide');
+    chatbot.classList.add('fullscreen');
+    chatbot.style.animation = 'slideInUp 0.3s ease-out';
     
     // Focus on input field
     setTimeout(() => {
@@ -405,57 +401,11 @@ function showChatbot() {
 
 function hideChatbot() {
     const chatbot = document.getElementById('chatbot-widget');
-    chatbot.classList.add('hide');
-    chatbot.classList.remove('show');
+    chatbot.classList.remove('fullscreen');
+    chatbot.style.animation = 'slideOutDown 0.3s ease-out';
     setTimeout(() => {
         chatbot.style.display = 'none';
-        chatbot.classList.remove('hide');
     }, 300);
-}
-
-function minimizeChatbot() {
-    const chatbot = document.getElementById('chatbot-widget');
-    const messages = document.getElementById('chatbot-messages');
-    const input = document.querySelector('.chatbot-input');
-    
-    if (isMinimized) {
-        // Restore
-        chatbot.style.height = originalSize.height;
-        messages.style.display = 'block';
-        input.style.display = 'flex';
-        isMinimized = false;
-    } else {
-        // Minimize
-        originalSize.height = chatbot.style.height || '500px';
-        chatbot.style.height = '60px';
-        messages.style.display = 'none';
-        input.style.display = 'none';
-        isMinimized = true;
-    }
-}
-
-function toggleFullscreen() {
-    const chatbot = document.getElementById('chatbot-widget');
-    const maximizeBtn = document.getElementById('maximize-btn');
-    const icon = maximizeBtn.querySelector('i');
-    
-    if (isFullscreen) {
-        // Exit fullscreen
-        chatbot.classList.remove('fullscreen');
-        chatbot.style.width = originalSize.width;
-        chatbot.style.height = originalSize.height;
-        icon.className = 'fas fa-expand';
-        maximizeBtn.title = 'Maximize';
-        isFullscreen = false;
-    } else {
-        // Enter fullscreen
-        originalSize.width = chatbot.style.width || '350px';
-        originalSize.height = chatbot.style.height || '500px';
-        chatbot.classList.add('fullscreen');
-        icon.className = 'fas fa-compress';
-        maximizeBtn.title = 'Restore';
-        isFullscreen = true;
-    }
 }
 
 function sendChatbotMessage() {
@@ -545,50 +495,8 @@ function sendChatbotMessage() {
     });
 }
 
-// Make chatbot draggable
-let isDragging = false;
-let dragOffset = { x: 0, y: 0 };
-
+// Allow Enter key to send message
 document.addEventListener('DOMContentLoaded', function() {
-    const chatbot = document.getElementById('chatbot-widget');
-    const header = document.getElementById('chatbot-header');
-    
-    if (header) {
-        header.addEventListener('mousedown', function(e) {
-            if (!isFullscreen) {
-                isDragging = true;
-                const rect = chatbot.getBoundingClientRect();
-                dragOffset.x = e.clientX - rect.left;
-                dragOffset.y = e.clientY - rect.top;
-                chatbot.style.cursor = 'grabbing';
-            }
-        });
-    }
-    
-    document.addEventListener('mousemove', function(e) {
-        if (isDragging && !isFullscreen) {
-            const x = e.clientX - dragOffset.x;
-            const y = e.clientY - dragOffset.y;
-            
-            // Keep chatbot within viewport
-            const maxX = window.innerWidth - chatbot.offsetWidth;
-            const maxY = window.innerHeight - chatbot.offsetHeight;
-            
-            chatbot.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
-            chatbot.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
-            chatbot.style.right = 'auto';
-            chatbot.style.bottom = 'auto';
-        }
-    });
-    
-    document.addEventListener('mouseup', function() {
-        if (isDragging) {
-            isDragging = false;
-            chatbot.style.cursor = 'default';
-        }
-    });
-    
-    // Allow Enter key to send message
     const chatbotInput = document.getElementById('chatbot-input-field');
     if (chatbotInput) {
         chatbotInput.addEventListener('keypress', function(e) {

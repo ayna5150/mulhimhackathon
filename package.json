@@ -1,30 +1,16 @@
 {
-  "name": "smartshield-landing-page",
+  "name": "smartshield-fullstack",
   "version": "1.0.0",
-  "description": "Professional landing page for SmartShield - AI-Powered Phishing Detection",
-  "main": "index.html",
+  "description": "SmartShield Complete Application - Backend, Dashboard, Website",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "build": "echo 'No build process needed for static site'",
-    "serve": "python -m http.server 3000"
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd dashboard && npm run dev\" \"cd website && npm run dev\"",
+    "build": "cd backend && npm run build && cd ../dashboard && npm run build",
+    "deploy:railway": "railway deploy",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod"
   },
-  "keywords": [
-    "landing-page",
-    "phishing-detection",
-    "cybersecurity",
-    "ai",
-    "smartshield"
-  ],
-  "author": "SmartShield Team",
-  "license": "MIT",
-  "dependencies": {
-    "express": "^4.18.2"
-  },
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/smartshield/landing-page.git"
-  },
-  "homepage": "https://smartshield.ai"
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }

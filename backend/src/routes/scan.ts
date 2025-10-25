@@ -141,6 +141,7 @@ router.post('/', async (req: Request, res: Response) => {
     });
 
     res.json(response);
+    return;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -155,6 +156,7 @@ router.post('/', async (req: Request, res: Response) => {
       message: 'Failed to process scan request',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -192,6 +194,7 @@ router.get('/:snapshotHash', async (req: Request, res: Response) => {
       created_at: scanResult.created_at,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Failed to retrieve scan result', {
@@ -205,6 +208,7 @@ router.get('/:snapshotHash', async (req: Request, res: Response) => {
       message: 'Failed to retrieve scan result',
       correlation_id: correlationId
     });
+    return;
   }
 });
 

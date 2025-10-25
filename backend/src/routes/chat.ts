@@ -125,6 +125,7 @@ router.post('/', async (req: Request, res: Response) => {
     });
 
     res.json(response);
+    return;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -139,6 +140,7 @@ router.post('/', async (req: Request, res: Response) => {
       message: 'Failed to process chat request',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -175,6 +177,7 @@ router.get('/:sessionId', async (req: Request, res: Response) => {
       updated_at: session.updated_at,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Failed to retrieve chat session', {
@@ -188,6 +191,7 @@ router.get('/:sessionId', async (req: Request, res: Response) => {
       message: 'Failed to retrieve chat session',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -220,6 +224,7 @@ router.delete('/:sessionId', async (req: Request, res: Response) => {
       session_id: sessionId,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Failed to delete chat session', {
@@ -233,6 +238,7 @@ router.delete('/:sessionId', async (req: Request, res: Response) => {
       message: 'Failed to delete chat session',
       correlation_id: correlationId
     });
+    return;
   }
 });
 

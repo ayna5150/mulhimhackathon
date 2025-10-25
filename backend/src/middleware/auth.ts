@@ -30,7 +30,7 @@ declare global {
 /**
  * Validate API key from request headers
  */
-export function validateApiKey(req: Request, res: Response, next: NextFunction): void {
+export function validateApiKey(req: Request, res: Response, next: NextFunction) {
   try {
     const apiKey = req.get('X-API-Key') || req.get('Authorization')?.replace('Bearer ', '');
     
@@ -67,22 +67,24 @@ export function validateApiKey(req: Request, res: Response, next: NextFunction):
     }
 
     // Log successful API key validation
-    securityLogger.logApiAccess(req.path, req.method, req.ip, req.get('User-Agent'));
+    securityLogger.logApiAccess(req.path, req.method, req.ip || 'unknown', req.get('User-Agent') || 'unknown');
 
     next();
+    return;
   } catch (error) {
     logger.error('API key validation error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'Authentication validation failed'
     });
+    return;
   }
 }
 
 /**
  * Authenticate JWT token
  */
-export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
+export function authenticateToken(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.get('Authorization');
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -97,27 +99,31 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
 
     jwt.verify(token, config.jwtSecret, (error, decoded) => {
       if (error) {
-        securityLogger.logAuthEvent('invalid_token', undefined, req.ip);
+        securityLogger.logAuthEvent('invalid_token', undefined, req.ip || 'unknown');
         
-        return res.status(403).json({
+        res.status(403).json({
           error: 'Forbidden',
           message: 'Invalid or expired token',
           code: 'INVALID_TOKEN'
         });
+        return;
       }
 
       // Add user info to request
       req.user = decoded as any;
-      securityLogger.logAuthEvent('token_validated', req.user?.userId, req.ip);
+      securityLogger.logAuthEvent('token_validated', req.user?.userId, req.ip || 'unknown');
       
       next();
+      return;
     });
+    return;
   } catch (error) {
     logger.error('Token authentication error:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: 'Token validation failed'
     });
+    return;
   }
 }
 
@@ -125,7 +131,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
  * Require specific role(s)
  */
 export function requireRole(roles: string | string[]) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         error: 'Unauthorized',
@@ -150,20 +156,21 @@ export function requireRole(roles: string | string[]) {
     }
 
     next();
+    return;
   };
 }
 
 /**
  * Require admin role
  */
-export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   return requireRole('admin')(req, res, next);
 }
 
 /**
  * Require organization access
  */
-export function requireOrgAccess(req: Request, res: Response, next: NextFunction): void {
+export function requireOrgAccess(req: Request, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({
       error: 'Unauthorized',
@@ -253,7 +260,7 @@ export function generateApiKey(): string {
 /**
  * Validate organization ID format
  */
-export function validateOrgId(req: Request, res: Response, next: NextFunction): void {
+export function validateOrgId(req: Request, res: Response, next: NextFunction) {
   const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
   
   if (orgId && typeof orgId === 'string') {
@@ -270,13 +277,14 @@ export function validateOrgId(req: Request, res: Response, next: NextFunction): 
   }
 
   next();
+  return;
 }
 
 /**
  * Audit log middleware for sensitive operations
  */
 export function auditLog(operation: string) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const originalSend = res.send;
     
     res.send = function(data) {
@@ -305,5 +313,6 @@ export function auditLog(operation: string) {
     };
 
     next();
+    return;
   };
 }

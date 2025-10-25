@@ -120,6 +120,7 @@ router.post('/', async (req: Request, res: Response) => {
       response_time_ms: responseTime,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -134,6 +135,7 @@ router.post('/', async (req: Request, res: Response) => {
       message: 'Failed to record analytics event',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -232,6 +234,7 @@ router.post('/batch', async (req: Request, res: Response) => {
       response_time_ms: responseTime,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -246,6 +249,7 @@ router.post('/batch', async (req: Request, res: Response) => {
       message: 'Failed to process batch analytics',
       correlation_id: correlationId
     });
+    return;
   }
 });
 
@@ -365,6 +369,7 @@ router.delete('/cleanup', async (req: Request, res: Response) => {
       retention_days: days,
       correlation_id: correlationId
     });
+    return;
 
   } catch (error) {
     logger.error('Analytics cleanup failed', {
@@ -377,6 +382,7 @@ router.delete('/cleanup', async (req: Request, res: Response) => {
       message: 'Failed to cleanup analytics data',
       correlation_id: correlationId
     });
+    return;
   }
 });
 

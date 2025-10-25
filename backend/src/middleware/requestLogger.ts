@@ -37,7 +37,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
   const originalEnd = res.end;
   res.end = function(chunk?: any, encoding?: any) {
     logResponse(req, res);
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   // Set correlation ID header for client
@@ -168,7 +168,7 @@ export function performanceMonitor(req: Request, res: Response, next: NextFuncti
     // Record performance metrics
     recordPerformanceMetrics(req, res, duration);
     
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   next();
@@ -205,7 +205,7 @@ export function securityLogger(req: Request, res: Response, next: NextFunction):
       logSecurityEvent(req, res);
     }
     
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   next();
