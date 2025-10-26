@@ -38,6 +38,9 @@
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "src/dev-server.ts",
+    "src/test-*.ts",
+    "src/migrations/*"
   ]
 }
