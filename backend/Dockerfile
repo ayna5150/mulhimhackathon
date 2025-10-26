@@ -3,6 +3,9 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
+# Install git (needed for some packages)
+RUN apk add --no-cache git
+
 # Copy package files
 COPY package*.json ./
 
@@ -12,8 +15,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application (use npx to ensure it works)
-RUN npx tsc
+# Build the application using node_modules/.bin/tsc directly
+RUN ./node_modules/.bin/tsc
 
 # Remove dev dependencies to reduce image size
 RUN npm prune --production
