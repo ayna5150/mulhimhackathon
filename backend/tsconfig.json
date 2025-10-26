@@ -33,7 +33,11 @@
     }
   },
   "include": [
-    "src/**/*"
+    "src/config/**/*",
+    "src/middleware/**/*",
+    "src/routes/**/*",
+    "src/utils/**/*",
+    "src/index.ts"
   ],
   "exclude": [
     "node_modules",
@@ -41,6 +45,10 @@
     "**/*.test.ts",
     "src/dev-server.ts",
     "src/test-*.ts",
-    "src/migrations/*"
+    "src/**/analytics.ts",
+    "src/**/storage.ts",
+    "src/types/**/*",
+    "src/services/**/*",
+    "src/migrations/**/*"
   ]
 }
